@@ -1,0 +1,51 @@
+version: '3'
+services:
+  server:
+    build:
+      context: ./server
+    ports:
+      - "5000:5000"
+    environment:
+      - MASTER_DB_URI=${MASTER_DB_URI}
+      - SLAVE_DB_URI_1=${SLAVE_DB_URI_1}
+      - SLAVE_DB_URI_2=${SLAVE_DB_URI_2}
+    depends_on:
+      - mongo-master
+      - mongo-slave-1
+      - mongo-slave-2
+
+  client:
+    build:
+      context: ./client
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+
+  mongo-master:
+    image: mongo
+    volumes:
+      - mongo-master-data:/data/db
+    ports:
+      - "27017:27017"
+
+  mongo-slave-1:
+    image: mongo
+    volumes:
+      - mongo-slave-1-data:/data/db
+    command: mongod --replSet rs0 --port 27018
+    ports:
+      - "27018:27018"
+
+  mongo-slave-2:
+    image: mongo
+    volumes:
+      - mongo-slave-2-data:/data/db
+    command: mongod --replSet rs0 --port 27019
+    ports:
+      - "27019:27019"
+
+volumes:
+  mongo-master-data:
+  mongo-slave-1-data:
+  mongo-slave-2-data:
